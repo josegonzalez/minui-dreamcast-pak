@@ -52,6 +52,22 @@ get_dpad_mode() {
 	echo "$dpad_mode"
 }
 
+get_widescreen_mode() {
+	widescreen_mode="off"
+	if [ -f "$GAMESETTINGS_DIR/widescreen-mode" ]; then
+		widescreen_mode="$(cat "$GAMESETTINGS_DIR/widescreen-mode")"
+	fi
+	echo "$widescreen_mode"
+}
+
+get_widescreen_cheat_mode() {
+	widescreen_cheat_mode="off"
+	if [ -f "$GAMESETTINGS_DIR/widescreen-cheat-mode" ]; then
+		widescreen_cheat_mode="$(cat "$GAMESETTINGS_DIR/widescreen-cheat-mode")"
+	fi
+	echo "$widescreen_cheat_mode"
+}
+
 configure_platform() {
 	# ensure config and data directories and files exist
 	mkdir -p "$FLYCAST_CONFIG_DIR" "$FLYCAST_DATA_DIR"
@@ -108,6 +124,20 @@ configure_cpu() {
 	fi
 }
 
+configure_widescreen() {
+	widescreen_mode="$(get_widescreen_mode)"
+	widescreen_cheat_mode="$(get_widescreen_cheat_mode)"
+
+	# modify ${FLYCAST_CONFIG_DIR}emu.cfg
+	# set rend.WideScreen to yes if widescreen_mode is on
+	# set rend.WidescreenGameHacks to yes if widescreen_cheat_mode is on
+	if [ "$widescreen_mode" = "on" ]; then
+		sed -i 's/rend.WideScreen = .*/rend.WideScreen = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
+	fi
+	if [ "$widescreen_cheat_mode" = "on" ]; then
+		sed -i 's/rend.WidescreenGameHacks = .*/rend.WidescreenGameHacks = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
+	fi
+}
 restore_save_states_for_game() {
 	SANITIZED_ROM_NAME="$(get_sanitized_rom_name "$ROM_NAME")"
 	mkdir -p "$FLYCAST_DATA_DIR" "$SHARED_USERDATA_PATH/DC-flycast"
@@ -223,9 +253,9 @@ main() {
 	configure_platform
 	configure_controls
 	configure_cpu
-	restore_save_states_for_game
+	configure_widescreen
 	configure_animations
-	which trimui_inputd
+	restore_save_states_for_game
 
 	flycast --help || true
 	flycast "$@"
