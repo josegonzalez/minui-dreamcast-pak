@@ -57,6 +57,9 @@ get_widescreen_mode() {
 	if [ -f "$GAMESETTINGS_DIR/widescreen-mode" ]; then
 		widescreen_mode="$(cat "$GAMESETTINGS_DIR/widescreen-mode")"
 	fi
+	if [ -f "$GAMESETTINGS_DIR/widescreen-mode.tmp" ]; then
+		widescreen_mode="$(cat "$GAMESETTINGS_DIR/widescreen-mode.tmp")"
+	fi
 	echo "$widescreen_mode"
 }
 
@@ -64,6 +67,9 @@ get_widescreen_cheat_mode() {
 	widescreen_cheat_mode="off"
 	if [ -f "$GAMESETTINGS_DIR/widescreen-cheat-mode" ]; then
 		widescreen_cheat_mode="$(cat "$GAMESETTINGS_DIR/widescreen-cheat-mode")"
+	fi
+	if [ -f "$GAMESETTINGS_DIR/widescreen-cheat-mode.tmp" ]; then
+		widescreen_cheat_mode="$(cat "$GAMESETTINGS_DIR/widescreen-cheat-mode.tmp")"
 	fi
 	echo "$widescreen_cheat_mode"
 }
