@@ -74,17 +74,6 @@ get_widescreen_mode() {
 	echo "$widescreen_mode"
 }
 
-get_widescreen_cheat_mode() {
-	widescreen_cheat_mode="off"
-	if [ -f "$GAMESETTINGS_DIR/widescreen-cheat-mode" ]; then
-		widescreen_cheat_mode="$(cat "$GAMESETTINGS_DIR/widescreen-cheat-mode")"
-	fi
-	if [ -f "$GAMESETTINGS_DIR/widescreen-cheat-mode.tmp" ]; then
-		widescreen_cheat_mode="$(cat "$GAMESETTINGS_DIR/widescreen-cheat-mode.tmp")"
-	fi
-	echo "$widescreen_cheat_mode"
-}
-
 configure_platform() {
 	# ensure config and data directories and files exist
 	mkdir -p "$FLYCAST_CONFIG_DIR" "$FLYCAST_DATA_DIR"
@@ -148,15 +137,14 @@ configure_cpu() {
 
 configure_widescreen() {
 	widescreen_mode="$(get_widescreen_mode)"
-	widescreen_cheat_mode="$(get_widescreen_cheat_mode)"
 
 	# modify ${FLYCAST_CONFIG_DIR}emu.cfg
 	# set rend.WideScreen to yes if widescreen_mode is on
 	# set rend.WidescreenGameHacks to yes if widescreen_cheat_mode is on
-	if [ "$widescreen_mode" = "on" ]; then
+	if [ "$widescreen_mode" = "on" ] || [ "$widescreen_mode" = "cheat" ]; then
 		sed -i 's/rend.WideScreen = .*/rend.WideScreen = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
 	fi
-	if [ "$widescreen_cheat_mode" = "on" ]; then
+	if [ "$widescreen_mode" = "cheat" ]; then
 		sed -i 's/rend.WidescreenGameHacks = .*/rend.WidescreenGameHacks = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
 	fi
 }
