@@ -72,7 +72,7 @@ configure_platform() {
 		mv vmu_save_A2.bin "${FLYCAST_DATA_DIR}vmu_save_A2.bin"
 	fi
 
-  find . -name '*.state' -print | xargs mv % "${FLYCAST_DATA_DIR}" || true
+	find . -name '*.state' -print | xargs mv % "${FLYCAST_DATA_DIR}" || true
 
 	cd "$PAK_DIR"
 }
@@ -130,11 +130,11 @@ restore_save_states_for_game() {
 
 configure_animations() {
 	# update animations
-	echo 1 > /sys/class/led_anim/effect_enable 
-	echo FFFFFF > /sys/class/led_anim/effect_rgb_hex_lr
-	echo 1 > /sys/class/led_anim/effect_cycles_lr
-	echo 1000 > /sys/class/led_anim/effect_duration_lr
-	echo 1 >  /sys/class/led_anim/effect_lr
+	echo 1 >/sys/class/led_anim/effect_enable
+	echo FFFFFF >/sys/class/led_anim/effect_rgb_hex_lr
+	echo 1 >/sys/class/led_anim/effect_cycles_lr
+	echo 1000 >/sys/class/led_anim/effect_duration_lr
+	echo 1 >/sys/class/led_anim/effect_lr
 }
 
 show_message() {

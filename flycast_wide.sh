@@ -11,7 +11,6 @@ $EMU_DIR/effect.sh
 #disable netplay
 NET_PARAM=
 
-
 # Variable for the path to the Flycast directory
 FLYCAST_DIR="/mnt/SDCARD/RetroArch/.retroarch/config/Flycast"
 
@@ -33,45 +32,24 @@ ROM_OPT="$FLYCAST_DIR/$ROM_NAME.opt"
 
 # Check if the destination files exist
 if [ ! -f "$ROM_CFG" ] && [ ! -f "$ROM_OPT" ]; then
-    # Copy the configuration files with the new name
-    cp "$DC_CFG" "$ROM_CFG"
-    cp "$DC_OPT" "$ROM_OPT"
-    echo "Copied $DC_CFG to $ROM_CFG"
-    echo "Copied $DC_OPT to $ROM_OPT"
-    
-    # Apply the configuration patches
-    /mnt/SDCARD/System/usr/trimui/scripts/patch_ra_cfg.sh "$FLYCAST_DIR/widescreen.cfg" "$ROM_CFG"
-    /mnt/SDCARD/System/usr/trimui/scripts/patch_ra_cfg.sh "$FLYCAST_DIR/widescreen.opt" "$ROM_OPT"
-    echo "Patch applied to $ROM_CFG"
-    echo "Patch applied to $ROM_OPT"
+	# Copy the configuration files with the new name
+	cp "$DC_CFG" "$ROM_CFG"
+	cp "$DC_OPT" "$ROM_OPT"
+	echo "Copied $DC_CFG to $ROM_CFG"
+	echo "Copied $DC_OPT to $ROM_OPT"
+
+	# Apply the configuration patches
+	/mnt/SDCARD/System/usr/trimui/scripts/patch_ra_cfg.sh "$FLYCAST_DIR/widescreen.cfg" "$ROM_CFG"
+	/mnt/SDCARD/System/usr/trimui/scripts/patch_ra_cfg.sh "$FLYCAST_DIR/widescreen.opt" "$ROM_OPT"
+	echo "Patch applied to $ROM_CFG"
+	echo "Patch applied to $ROM_OPT"
 	HOME=$RA_DIR/ $RA_DIR/ra64.trimui -v -L $RA_DIR/.retroarch/cores/flycast_libretro.so "$@"
 	# cleaning
 	rm "$ROM_CFG"
 	rm "$ROM_OPT"
 else
-    message="The following files already exist:"
-    [ -f "$ROM_CFG" ] && message="$message $ROM_CFG"
-    [ -f "$ROM_OPT" ] && message="$message $ROM_OPT"
-    echo "$message"
+	message="The following files already exist:"
+	[ -f "$ROM_CFG" ] && message="$message $ROM_CFG"
+	[ -f "$ROM_OPT" ] && message="$message $ROM_OPT"
+	echo "$message"
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
