@@ -191,7 +191,6 @@ configure_platform() {
 		mv vmu_save_A2.bin "${FLYCAST_DATA_DIR}vmu_save_A2.bin"
 	fi
 
-	cd "$FLYCAST_DATA_DIR"
 	for file in *.state; do
 		if [ ! -f "$file" ]; then
 			continue
