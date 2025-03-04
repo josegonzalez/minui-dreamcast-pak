@@ -407,6 +407,16 @@ main() {
 		sync
 	fi
 
+	if [ ! -f "${FLYCAST_BIOS_DIR}dc_boot.bin" ]; then
+		show_message "Missing /BIOS/DC/dc_boot.bin" 2
+		exit 1
+	fi
+
+	if [ ! -f "${FLYCAST_BIOS_DIR}naomi.zip" ]; then
+		show_message "Missing /BIOS/DC/naomi.zip" 2
+		exit 1
+	fi
+
 	settings_menu
 	configure_platform
 	configure_controls
