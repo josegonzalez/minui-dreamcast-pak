@@ -25,6 +25,17 @@ get_sanitized_rom_name() {
 	echo "$SANITIZED_ROM_NAME"
 }
 
+get_controller_layout() {
+	controller_layout="default"
+	if [ -f "$GAMESETTINGS_DIR/controller-layout" ]; then
+		controller_layout="$(cat "$GAMESETTINGS_DIR/controller-layout")"
+	fi
+	if [ -f "$GAMESETTINGS_DIR/controller-layout.tmp" ]; then
+		controller_layout="$(cat "$GAMESETTINGS_DIR/controller-layout.tmp")"
+	fi
+	echo "$controller_layout"
+}
+
 get_cpu_mode() {
 	cpu_mode="performance"
 	if [ -f "$GAMESETTINGS_DIR/cpu-mode" ]; then
@@ -100,6 +111,7 @@ configure_platform() {
 }
 
 configure_controls() {
+	controller_layout="$(get_controller_layout)"
 	dpad_mode="$(get_dpad_mode)"
 
 	if [ "$dpad_mode" = "joystick-on-f2" ]; then
@@ -114,6 +126,10 @@ configure_controls() {
 		touch /tmp/trimui_inputd/input_dpad_to_joystick
 	fi
 
+	mkdir -p "${FLYCAST_CONFIG_DIR}mappings"
+	if [ "$controller_layout" = "default" ]; then
+		cp -f "$PAK_DIR/config/mappings/default/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+	fi
 }
 
 configure_cpu() {
