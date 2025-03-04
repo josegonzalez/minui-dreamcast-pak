@@ -1,0 +1,41 @@
+{
+    "label": "DC",
+    "launch": "launch.sh",
+    "description": "Runs Flycast in standalone mode for the specified rom",
+    "platforms": [
+        "tg5040"
+    ],
+    "settings": [
+        {
+            "name": "Controller Layout",
+            "options": ["default"],
+            "features": {
+                "hide_confirm": false
+            }
+        },
+        {
+            "name": "DPAD Mode",
+            "options": ["dpad", "joystick", "joystick-and-dpad", "joystick-on-f2"],
+            "features": {
+                "hide_confirm": false
+            }
+        },
+        {
+            "name": "CPU Mode",
+            "options": ["performance", "ondemand"],
+            "features": {
+                "hide_confirm": false
+            }
+        },
+        {
+            "name": "Widescreen Mode",
+            "options": ["off", "on", "cheat"],
+            "features": {
+                "hide_confirm": false
+            }
+        },
+        {
+            "name": "Save settings for game"
+        }
+    ]
+}

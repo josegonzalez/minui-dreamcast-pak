@@ -74,6 +74,103 @@ get_widescreen_mode() {
 	echo "$widescreen_mode"
 }
 
+write_settings_json() {
+	# name: Controller Layout
+	controller_layout="$(get_controller_layout)"
+	# name: CPU Mode
+	cpu_mode="$(get_cpu_mode)"
+	# name: DPAD Mode
+	dpad_mode="$(get_dpad_mode)"
+	# name: Widescreen Mode
+	widescreen_mode="$(get_widescreen_mode)"
+
+	jq -rM '{settings: .settings}' "$PAK_DIR/config.json" >"$GAMESETTINGS_DIR/settings.json"
+
+	update_setting_key "$GAMESETTINGS_DIR/settings.json" "Controller Layout" "$controller_layout"
+	update_setting_key "$GAMESETTINGS_DIR/settings.json" "CPU Mode" "$cpu_mode"
+	update_setting_key "$GAMESETTINGS_DIR/settings.json" "DPAD Mode" "$dpad_mode"
+	update_setting_key "$GAMESETTINGS_DIR/settings.json" "Widescreen Mode" "$widescreen_mode"
+	sync
+}
+
+# the settings.json file contains a "settings" array
+# we have a series of settings that we need to update based on the values above
+# for each setting, we need to find the index of the setting where the setting's name key matches the name above
+# then we need to find the index of the option in the setting's options array that matches the value above
+# and finally we need to update the setting's selected key to the index of the option
+# the final settings.json should have a "settings" array, where each of the settings has an updated selected key
+update_setting_key() {
+	settings_file="$1"
+	setting_name="$2"
+	option_value="$3"
+
+	# fetch the option index
+	jq --arg name "$setting_name" --arg option "$option_value" '
+ 		.settings |= map(if .name == $name then . + {"selected": ((.options // []) | index($option) // -1)} else . end)
+	' "$settings_file" >"$settings_file.tmp"
+	mv -f "$settings_file.tmp" "$settings_file"
+}
+
+settings_menu() {
+	mkdir -p "$GAMESETTINGS_DIR"
+
+	rm -f "$GAMESETTINGS_DIR/controller-layout.tmp"
+	rm -f "$GAMESETTINGS_DIR/cpu-mode.tmp"
+	rm -f "$GAMESETTINGS_DIR/dpad-mode.tmp"
+	rm -f "$GAMESETTINGS_DIR/widescreen-mode.tmp"
+
+	controller_layout="$(get_controller_layout)"
+	cpu_mode="$(get_cpu_mode)"
+	dpad_mode="$(get_dpad_mode)"
+	widescreen_mode="$(get_widescreen_mode)"
+
+	write_settings_json
+
+	r2_value="$(coreutils timeout .1s evtest /dev/input/event3 2>/dev/null | awk '/ABS_RZ/{getline; print}' | awk '{print $2}' || true)"
+	if [ "$r2_value" = "255" ]; then
+		while true; do
+
+			minui_list_output="$("minui-list-$PLATFORM" --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --header "N64 Settings" --action-button "X" --action-text "PLAY" --stdout-value state --confirm-text "CONFIRM")" || {
+				exit_code="$?"
+				# 4 = action button
+				# we break out of the loop because the action button is the play button
+				if [ "$exit_code" -eq 4 ]; then
+					# shellcheck disable=SC2016
+					echo "$minui_list_output" | jq -r --arg name "Controller Layout" '.settings[] | select(.name == $name) | .options[.selected]' >"$GAMESETTINGS_DIR/controller-layout.tmp"
+					# shellcheck disable=SC2016
+					echo "$minui_list_output" | jq -r --arg name "CPU Mode" '.settings[] | select(.name == $name) | .options[.selected]' >"$GAMESETTINGS_DIR/cpu-mode.tmp"
+					# shellcheck disable=SC2016
+					echo "$minui_list_output" | jq -r --arg name "DPAD Mode" '.settings[] | select(.name == $name) | .options[.selected]' >"$GAMESETTINGS_DIR/dpad-mode.tmp"
+					# shellcheck disable=SC2016
+					echo "$minui_list_output" | jq -r --arg name "Widescreen Mode" '.settings[] | select(.name == $name) | .options[.selected]' >"$GAMESETTINGS_DIR/widescreen-mode.tmp"
+
+					break
+				fi
+
+				# 2 = back button, 3 = menu button
+				# both are errors, so we exit with the exit code
+				if [ "$exit_code" -ne 0 ]; then
+					exit "$exit_code"
+				fi
+			}
+
+			# fetch values for next loop
+			controller_layout="$(echo "$minui_list_output" | jq -r --arg name "Controller Layout" '.settings[] | select(.name == $name) | .options[.selected]')"
+			cpu_mode="$(echo "$minui_list_output" | jq -r --arg name "CPU Mode" '.settings[] | select(.name == $name) | .options[.selected]')"
+			dpad_mode="$(echo "$minui_list_output" | jq -r --arg name "DPAD Mode" '.settings[] | select(.name == $name) | .options[.selected]')"
+			widescreen_mode="$(echo "$minui_list_output" | jq -r --arg name "Widescreen Mode" '.settings[] | select(.name == $name) | .options[.selected]')"
+
+			# save values to disk
+			echo "$minui_list_output" >"$GAMESETTINGS_DIR/settings.json"
+			echo "$controller_layout" >"$GAMESETTINGS_DIR/controller-layout"
+			echo "$cpu_mode" >"$GAMESETTINGS_DIR/cpu-mode"
+			echo "$dpad_mode" >"$GAMESETTINGS_DIR/dpad-mode"
+			echo "$widescreen_mode" >"$GAMESETTINGS_DIR/widescreen-mode"
+			sync
+		done
+	fi
+}
+
 configure_platform() {
 	# ensure config and data directories and files exist
 	mkdir -p "$FLYCAST_CONFIG_DIR" "$FLYCAST_DATA_DIR"
@@ -268,6 +365,7 @@ main() {
 		mv "$BIOS_PATH/dreamcast" "$BIOS_PATH/DC"
 	fi
 
+	settings_menu
 	configure_platform
 	configure_controls
 	configure_cpu

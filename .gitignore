@@ -1,0 +1,10 @@
+dist
+bin/*
+!bin/.gitkeep
+res/fonts/*
+!res/fonts/.gitkeep
+
+!bin/gptokeyb2
+!bin/gptokeyb2.LICENSE
+!bin/flycast
+!bin/flycast.LICENSE
