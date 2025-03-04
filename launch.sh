@@ -363,6 +363,25 @@ cleanup() {
 	done
 	cd "$PAK_DIR"
 
+	# rename any screenshots to include the rom name
+	if [ -d "$SDCARD_PATH/Screenshots" ]; then
+		cd "$SDCARD_PATH/Screenshots"
+		for file in *.png; do
+			if [ ! -f "$file" ]; then
+				continue
+			fi
+			# only handle files that start with "Flycast-"
+			if ! echo "$file" | grep -q "^Flycast-"; then
+				continue
+			fi
+
+			# replace the word "Flycast" with the rom name
+			screenshot_name="$(echo "$file" | sed "s/Flycast/$SANITIZED_ROM_NAME/g")"
+			mv "$file" "$SDCARD_PATH/Screenshots/$screenshot_name"
+		done
+		cd "$PAK_DIR"
+	fi
+
 	sync
 }
 

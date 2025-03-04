@@ -8,3 +8,4 @@ res/fonts/*
 !bin/gptokeyb2.LICENSE
 !bin/flycast
 !bin/flycast.LICENSE
+!bin/xdg-user-dir
