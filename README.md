@@ -100,3 +100,9 @@ Screenshots are written to `/Screenshots` with a sanitized version of the rom na
 ### Debug Logging
 
 To enable debug logging, create a file named debug in `$SDCARD_PATH/.userdata/$PLATFORM/DC-flycast` folder. Logs will be written to the`$SDCARD_PATH/.userdata/$PLATFORM/logs/` folder.
+
+## Screenshots
+
+| Name               | Image                                                     |
+|--------------------|-----------------------------------------------------------|
+| Emulator Settings  | <img src="screenshots/emulator-settings.png" width=240 /> |
