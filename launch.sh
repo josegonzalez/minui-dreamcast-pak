@@ -130,7 +130,7 @@ settings_menu() {
 	if [ "$r2_value" = "255" ]; then
 		while true; do
 
-			minui_list_output="$("minui-list-$PLATFORM" --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --header "N64 Settings" --action-button "X" --action-text "PLAY" --stdout-value state --confirm-text "CONFIRM")" || {
+			minui_list_output="$("minui-list-$PLATFORM" --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --header "DC Settings" --action-button "X" --action-text "PLAY" --stdout-value state --confirm-text "CONFIRM")" || {
 				exit_code="$?"
 				# 4 = action button
 				# we break out of the loop because the action button is the play button
