@@ -191,9 +191,16 @@ configure_platform() {
 		mv vmu_save_A2.bin "${FLYCAST_DATA_DIR}vmu_save_A2.bin"
 	fi
 
-	find . -name '*.state' -print | xargs mv % "${FLYCAST_DATA_DIR}" || true
-
+	cd "$FLYCAST_DATA_DIR"
+	for file in *.state; do
+		if [ ! -f "$file" ]; then
+			continue
+		fi
+		mv "$file" "${FLYCAST_DATA_DIR}"
+	done
 	cd "$PAK_DIR"
+
+	sync
 }
 
 configure_controls() {
@@ -264,7 +271,13 @@ restore_save_states_for_game() {
 	# we could restore them to the normal MinUI paths
 	if [ -f "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state" ]; then
 		cd "$FLYCAST_DATA_DIR"
-		find . -name '*.state' -print | xargs mv % "$SHARED_USERDATA_PATH/DC-flycast/"
+		for file in *.state; do
+			if [ ! -f "$file" ]; then
+				continue
+			fi
+			mv "$file" "$SHARED_USERDATA_PATH/DC-flycast/"
+		done
+		cd "$PAK_DIR"
 	fi
 
 	# state files are the save states and should be restored from SHARED_USERDATA_PATH/DC-flycast/
@@ -341,9 +354,16 @@ cleanup() {
 	rm -f /tmp/dc-saves-restored
 
 	mkdir -p "$SHARED_USERDATA_PATH/DC-flycast"
-	if [ -f "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state" ]; then
-		mv -f "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state" "$SHARED_USERDATA_PATH/DC-flycast/$SANITIZED_ROM_NAME.state"
-	fi
+	cd "$FLYCAST_DATA_DIR"
+	for file in *.state; do
+		if [ ! -f "$file" ]; then
+			continue
+		fi
+		mv "$file" "$SHARED_USERDATA_PATH/DC-flycast/"
+	done
+	cd "$PAK_DIR"
+
+	sync
 }
 
 main() {
