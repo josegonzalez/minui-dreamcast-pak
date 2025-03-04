@@ -18,7 +18,10 @@ Use the correct platform for your device.
 4. Extract the zip in place, then delete the zip file.
 5. Confirm that there is a `/Emus/$PLATFORM/DC.pak/launch.sh` file on your SD card.
 6. Create a folder at `/Roms/Sega Dreamcast (DC)` and place your roms in this directory.
-7. Unmount your SD Card and insert it into your MinUI device.
+7. Copy your BIOS files to `/BIOS/DC`. The paths are as follows
+    1. Dreamcast: `/BIOS/DC/dc_boot.bin`
+    2. Naomi: `/BIOS/DC/naomi.zip`
+8. Unmount your SD Card and insert it into your MinUI device.
 
 ## Usage
 
