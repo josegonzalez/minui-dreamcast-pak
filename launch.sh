@@ -280,6 +280,8 @@ restore_save_states_for_game() {
 	fi
 
 	touch /tmp/dc-saves-restored
+
+	sync
 }
 
 show_message() {
