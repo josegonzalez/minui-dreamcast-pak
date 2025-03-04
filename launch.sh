@@ -363,6 +363,7 @@ main() {
 	if [ -f "$BIOS_PATH/dc" ]; then
 		mv "$BIOS_PATH/dc" "$BIOS_PATH/dreamcast"
 		mv "$BIOS_PATH/dreamcast" "$BIOS_PATH/DC"
+		sync
 	fi
 
 	settings_menu
