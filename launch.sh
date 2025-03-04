@@ -138,6 +138,16 @@ configure_widescreen() {
 		sed -i 's/rend.WidescreenGameHacks = .*/rend.WidescreenGameHacks = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
 	fi
 }
+
+configure_animations() {
+	# update animations
+	echo 1 >/sys/class/led_anim/effect_enable
+	echo FFFFFF >/sys/class/led_anim/effect_rgb_hex_lr
+	echo 1 >/sys/class/led_anim/effect_cycles_lr
+	echo 1000 >/sys/class/led_anim/effect_duration_lr
+	echo 1 >/sys/class/led_anim/effect_lr
+}
+
 restore_save_states_for_game() {
 	SANITIZED_ROM_NAME="$(get_sanitized_rom_name "$ROM_NAME")"
 	mkdir -p "$FLYCAST_DATA_DIR" "$SHARED_USERDATA_PATH/DC-flycast"
@@ -156,15 +166,6 @@ restore_save_states_for_game() {
 	fi
 
 	touch /tmp/dc-saves-restored
-}
-
-configure_animations() {
-	# update animations
-	echo 1 >/sys/class/led_anim/effect_enable
-	echo FFFFFF >/sys/class/led_anim/effect_rgb_hex_lr
-	echo 1 >/sys/class/led_anim/effect_cycles_lr
-	echo 1000 >/sys/class/led_anim/effect_duration_lr
-	echo 1 >/sys/class/led_anim/effect_lr
 }
 
 show_message() {
