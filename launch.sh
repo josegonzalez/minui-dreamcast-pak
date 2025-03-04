@@ -165,6 +165,13 @@ restore_save_states_for_game() {
 		cp -f "$SHARED_USERDATA_PATH/DC-flycast/$SANITIZED_ROM_NAME.state" "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state"
 	fi
 
+	if [ -f "/tmp/resume_slot.txt" ]; then
+		save_state="$(xargs <"/tmp/resume_slot.txt")"
+		if [ "$save_state" -eq 0 ] && [ -f "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state" ]; then
+			sed -i 's/Dreamcast.AutoLoadState = .*/Dreamcast.AutoLoadState = yes/' "${FLYCAST_CONFIG_DIR}emu.cfg"
+		fi
+	fi
+
 	touch /tmp/dc-saves-restored
 }
 
