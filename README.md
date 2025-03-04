@@ -47,6 +47,10 @@ Dreamcast Controller Keys:
 |-------------------------|------------------------|
 | MinUI Menu Resume State | `X`                    |
 | Quit Game               | `MENU`                 |
+| Fast Forward            | `R2`                   |
+| Load State              | `L3`, or `HOTKEY 1`    |
+| Save State              | `R3`, or `HOTKEY 2`    |
+| Screenshot              | `L2`                   |
 
 ### Emulator settings
 
