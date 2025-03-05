@@ -252,15 +252,6 @@ configure_widescreen() {
 	fi
 }
 
-configure_animations() {
-	# update animations
-	echo 1 >/sys/class/led_anim/effect_enable
-	echo FFFFFF >/sys/class/led_anim/effect_rgb_hex_lr
-	echo 1 >/sys/class/led_anim/effect_cycles_lr
-	echo 1000 >/sys/class/led_anim/effect_duration_lr
-	echo 1 >/sys/class/led_anim/effect_lr
-}
-
 restore_save_states_for_game() {
 	SANITIZED_ROM_NAME="$(get_sanitized_rom_name "$ROM_NAME")"
 	mkdir -p "$FLYCAST_DATA_DIR" "$SHARED_USERDATA_PATH/DC-flycast"
@@ -421,7 +412,6 @@ main() {
 	configure_controls
 	configure_cpu
 	configure_widescreen
-	configure_animations
 	restore_save_states_for_game
 
 	flycast --help || true
