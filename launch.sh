@@ -33,6 +33,7 @@ get_controller_layout() {
 	if [ -f "$GAMESETTINGS_DIR/controller-layout.tmp" ]; then
 		controller_layout="$(cat "$GAMESETTINGS_DIR/controller-layout.tmp")"
 	fi
+
 	echo "$controller_layout"
 }
 
@@ -234,6 +235,12 @@ configure_controls() {
 	mkdir -p "${FLYCAST_CONFIG_DIR}mappings"
 	if [ "$controller_layout" = "default" ]; then
 		cp -f "$PAK_DIR/config/mappings/default/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+	elif [ "$controller_layout" = "custom" ]; then
+		if [ -f "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg" ]; then
+			cp -f "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+		else
+			cp -f "$PAK_DIR/config/mappings/default/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+		fi
 	fi
 }
 
@@ -383,6 +390,12 @@ cleanup() {
 			mv "$file" "$SDCARD_PATH/Screenshots/$screenshot_name"
 		done
 		cd "$PAK_DIR"
+	fi
+
+	controller_layout="$(get_controller_layout)"
+	if [ "$controller_layout" = "custom" ]; then
+		mkdir -p "$GAMESETTINGS_DIR"
+		cp -f "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg" "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg"
 	fi
 
 	sync

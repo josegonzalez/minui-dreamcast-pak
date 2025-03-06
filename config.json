@@ -8,7 +8,7 @@
     "settings": [
         {
             "name": "Controller Layout",
-            "options": ["default"],
+            "options": ["default", "custom"],
             "features": {
                 "hide_confirm": true
             }

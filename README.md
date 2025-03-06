@@ -73,7 +73,11 @@ This pak also ships with some default Flycast settings. Users may edit these set
 Allows changing between controller layouts.
 
 - default: `default`
-- options: `default`
+- options: `default`, `custom`
+
+If `default` is set, the pak will reset the settings to the built-in controller mapping on boot.
+
+When `custom` is selected, users will be allowed to customize their controller layout and have that persist across game starts. These settings will also be stored in a per-game path, and restored when that same game is played again.
 
 #### CPU Mode
 
