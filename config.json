@@ -36,6 +36,9 @@
         },
         {
             "name": "Save settings for game"
+        },
+        {
+            "name": "Re-apply default flycast settings"
         }
     ]
 }

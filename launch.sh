@@ -154,6 +154,17 @@ settings_menu() {
 				fi
 			}
 
+			selected_index="$(echo "$minui_list_output" | jq -r ' .selected')"
+			# 5 = Re-apply default emulator settings
+			if [ "$selected_index" -eq 5 ]; then
+				show_message "Re-applying default flycast settings" 2
+				mkdir -p "$FLYCAST_CONFIG_DIR"
+				cp -f "$PAK_DIR/config/emu.cfg" "${FLYCAST_CONFIG_DIR}emu.cfg"
+				sync
+				continue
+			fi
+
+			show_message "Saving settings for game" 2
 			# fetch values for next loop
 			controller_layout="$(echo "$minui_list_output" | jq -r --arg name "Controller Layout" '.settings[] | select(.name == $name) | .options[.selected]')"
 			cpu_mode="$(echo "$minui_list_output" | jq -r --arg name "CPU Mode" '.settings[] | select(.name == $name) | .options[.selected]')"
@@ -174,7 +185,9 @@ settings_menu() {
 configure_platform() {
 	# ensure config and data directories and files exist
 	mkdir -p "$FLYCAST_CONFIG_DIR" "$FLYCAST_DATA_DIR"
-	cp -f "$PAK_DIR/config/emu.cfg" "${FLYCAST_CONFIG_DIR}emu.cfg"
+	if [ ! -f "${FLYCAST_CONFIG_DIR}emu.cfg" ]; then
+		cp -f "$PAK_DIR/config/emu.cfg" "${FLYCAST_CONFIG_DIR}emu.cfg"
+	fi
 
 	# migrate non-bios files are moved to the $FLYCAST_DATA_DIR
 	cd "$FLYCAST_BIOS_DIR"
