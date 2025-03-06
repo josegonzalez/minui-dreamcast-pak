@@ -50,6 +50,7 @@ Dreamcast Controller Keys:
 |-------------------------|------------------------|
 | MinUI Menu Resume State | `X`                    |
 | Quit Game               | `MENU`                 |
+| Flycast Menu            | `SELECT`               |
 | Fast Forward            | `R2`                   |
 | Load State              | `L3`, or `HOTKEY 1`    |
 | Save State              | `R3`, or `HOTKEY 2`    |
@@ -60,6 +61,12 @@ Dreamcast Controller Keys:
 To change emulator settings, press and hold the `R2` button while selecting/resuming a game to play. Hold R2 until a menu appears.
 
 If the `B` or `MENU` buttons are pressed, the user is returned to the MinUI game selection screen. Settings are managed on a per-game basis, and can be saved for future gameplay, or the game can be started with the current settings as is.
+
+To start a game in this menu, press the `X` button. Any settings currently selected will be used for the game session.
+
+Settings in this menu can be saved by selecting `Save settings for game` and pressing the `A` button. This will save the settings and bring the user back to the menu. The `X` button can be pressed to start the game.
+
+This pak also ships with some default Flycast settings. Users may edit these settings in the in-emulator settings menu, and they will persist across game sessions. To reset these settings to the ones shipped with Flycast, select `Re-apply default flycast settings` and press the `A` button.
 
 #### Controller Layout
 
