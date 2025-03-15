@@ -1,20 +1,29 @@
 #!/bin/sh
 set -eo pipefail
+PAK_DIR="$(dirname "$0")"
+PAK_NAME="$(basename "$PAK_DIR")"
+PAK_NAME="${PAK_NAME%.*}"
 [ -f "$USERDATA_PATH/DC-flycast/debug" ] && set -x
 
-rm -f "$LOGS_PATH/DC.txt"
-exec >>"$LOGS_PATH/DC.txt"
+rm -f "$LOGS_PATH/$PAK_NAME.txt"
+exec >>"$LOGS_PATH/$PAK_NAME.txt"
 exec 2>&1
 
-echo $0 $*
-echo "1" >/tmp/stay_awake
+echo "$0" "$@"
+cd "$PAK_DIR" || exit 1
 
+architecture=arm
+if uname -m | grep -q '64'; then
+	architecture=arm64
+fi
+
+export HOME="$USERDATA_PATH/$PAK_NAME"
 export PAK_DIR="$SDCARD_PATH/Emus/$PLATFORM/DC.pak"
 export FLYCAST_BIOS_DIR="$BIOS_PATH/DC/"
 export FLYCAST_CONFIG_DIR="$USERDATA_PATH/DC-flycast/config/"
 export FLYCAST_DATA_DIR="$USERDATA_PATH/DC-flycast/data/"
 export LD_LIBRARY_PATH="$PAK_DIR/lib:$LD_LIBRARY_PATH"
-export PATH="$PAK_DIR/bin:$PATH"
+export PATH="$PAK_DIR/bin/$architecture:$PAK_DIR/bin/$PLATFORM:$PAK_DIR/bin:$PATH"
 
 export ROM_NAME="$(basename -- "$*")"
 export GAMESETTINGS_DIR="$USERDATA_PATH/DC-flycast/game-settings/$ROM_NAME"
@@ -130,8 +139,7 @@ settings_menu() {
 	r2_value="$(coreutils timeout .1s evtest /dev/input/event3 2>/dev/null | awk '/ABS_RZ/{getline; print}' | awk '{print $2}' || true)"
 	if [ "$r2_value" = "255" ]; then
 		while true; do
-
-			minui_list_output="$("minui-list-$PLATFORM" --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --header "DC Settings" --action-button "X" --action-text "PLAY" --stdout-value state --confirm-text "CONFIRM")" || {
+			minui_list_output="$(minui-list --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --header "DC Settings" --action-button "X" --action-text "PLAY" --stdout-value state --confirm-text "CONFIRM")" || {
 				exit_code="$?"
 				# 4 = action button
 				# we break out of the loop because the action button is the play button
@@ -191,7 +199,7 @@ configure_platform() {
 	fi
 
 	# migrate non-bios files are moved to the $FLYCAST_DATA_DIR
-	cd "$FLYCAST_BIOS_DIR"
+	cd "$FLYCAST_BIOS_DIR" || exit 1
 	if [ -d "boxart" ]; then
 		mv boxart "${FLYCAST_DATA_DIR}boxart"
 	fi
@@ -211,7 +219,7 @@ configure_platform() {
 		fi
 		mv "$file" "${FLYCAST_DATA_DIR}"
 	done
-	cd "$PAK_DIR"
+	cd "$PAK_DIR" || exit 1
 
 	sync
 }
@@ -280,14 +288,14 @@ restore_save_states_for_game() {
 	# this may happen if the game was saved on the device but we lost power before
 	# we could restore them to the normal MinUI paths
 	if [ -f "${FLYCAST_DATA_DIR}${SANITIZED_ROM_NAME}.state" ]; then
-		cd "$FLYCAST_DATA_DIR"
+		cd "$FLYCAST_DATA_DIR" || exit 1
 		for file in *.state; do
 			if [ ! -f "$file" ]; then
 				continue
 			fi
 			mv "$file" "$SHARED_USERDATA_PATH/DC-flycast/"
 		done
-		cd "$PAK_DIR"
+		cd "$PAK_DIR" || exit 1
 	fi
 
 	# state files are the save states and should be restored from SHARED_USERDATA_PATH/DC-flycast/
@@ -315,25 +323,12 @@ show_message() {
 		seconds="forever"
 	fi
 
-	killall sdl2imgshow >/dev/null 2>&1 || true
+	killall minui-presenter >/dev/null 2>&1 || true
 	echo "$message" 1>&2
 	if [ "$seconds" = "forever" ]; then
-		sdl2imgshow \
-			-i "$PAK_DIR/res/background.png" \
-			-f "$PAK_DIR/res/fonts/BPreplayBold.otf" \
-			-s 27 \
-			-c "220,220,220" \
-			-q \
-			-t "$message" >/dev/null 2>&1 &
+		minui-presenter --message "$message" --timeout -1
 	else
-		sdl2imgshow \
-			-i "$PAK_DIR/res/background.png" \
-			-f "$PAK_DIR/res/fonts/BPreplayBold.otf" \
-			-s 27 \
-			-c "220,220,220" \
-			-q \
-			-t "$message" >/dev/null 2>&1
-		sleep "$seconds"
+		minui-presenter --message "$message" --timeout "$seconds"
 	fi
 }
 
@@ -341,7 +336,7 @@ cleanup() {
 	SANITIZED_ROM_NAME="$(get_sanitized_rom_name "$ROM_NAME")"
 
 	rm -f /tmp/stay_awake
-	killall sdl2imgshow >/dev/null 2>&1 || true
+	killall minui-presenter >/dev/null 2>&1 || true
 
 	# cleanup remap
 	rm -f /tmp/trimui_inputd/input_no_dpad
@@ -364,18 +359,18 @@ cleanup() {
 	rm -f /tmp/dc-saves-restored
 
 	mkdir -p "$SHARED_USERDATA_PATH/DC-flycast"
-	cd "$FLYCAST_DATA_DIR"
+	cd "$FLYCAST_DATA_DIR" || exit 1
 	for file in *.state; do
 		if [ ! -f "$file" ]; then
 			continue
 		fi
 		mv "$file" "$SHARED_USERDATA_PATH/DC-flycast/"
 	done
-	cd "$PAK_DIR"
+	cd "$PAK_DIR" || exit 1
 
 	# rename any screenshots to include the rom name
 	if [ -d "$SDCARD_PATH/Screenshots" ]; then
-		cd "$SDCARD_PATH/Screenshots"
+		cd "$SDCARD_PATH/Screenshots" || exit 1
 		for file in *.png; do
 			if [ ! -f "$file" ]; then
 				continue
@@ -389,7 +384,7 @@ cleanup() {
 			screenshot_name="$(echo "$file" | sed "s/Flycast/$SANITIZED_ROM_NAME/g")"
 			mv "$file" "$SDCARD_PATH/Screenshots/$screenshot_name"
 		done
-		cd "$PAK_DIR"
+		cd "$PAK_DIR" || exit 1
 	fi
 
 	controller_layout="$(get_controller_layout)"
@@ -402,6 +397,9 @@ cleanup() {
 }
 
 main() {
+	echo "1" >/tmp/stay_awake
+	trap "cleanup" EXIT INT TERM HUP QUIT
+
 	if [ "$PLATFORM" = "tg3040" ] && [ -z "$DEVICE" ]; then
 		export DEVICE="brick"
 		export PLATFORM="tg5040"
@@ -412,7 +410,10 @@ main() {
 		exit 1
 	fi
 
-	trap cleanup INT TERM EXIT
+	if ! command -v minui-presenter >/dev/null 2>&1; then
+		show_message "minui-presenter not found" 2
+		return 1
+	fi
 
 	mkdir -p "$GAMESETTINGS_DIR"
 
@@ -440,7 +441,6 @@ main() {
 	configure_widescreen
 	restore_save_states_for_game
 
-	flycast --help || true
 	flycast "$@"
 }
 
