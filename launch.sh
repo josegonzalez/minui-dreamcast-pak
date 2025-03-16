@@ -10,13 +10,14 @@ exec 2>&1
 
 echo "$0" "$@"
 cd "$PAK_DIR" || exit 1
+mkdir -p "$USERDATA_PATH/DC-flycast"
 
 architecture=arm
 if uname -m | grep -q '64'; then
 	architecture=arm64
 fi
 
-export HOME="$USERDATA_PATH/$PAK_NAME"
+export HOME="$USERDATA_PATH/DC-flycast"
 export PAK_DIR="$SDCARD_PATH/Emus/$PLATFORM/DC.pak"
 export FLYCAST_BIOS_DIR="$BIOS_PATH/DC/"
 export FLYCAST_CONFIG_DIR="$USERDATA_PATH/DC-flycast/config/"
