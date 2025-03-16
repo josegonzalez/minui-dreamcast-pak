@@ -326,7 +326,7 @@ show_message() {
 	killall minui-presenter >/dev/null 2>&1 || true
 	echo "$message" 1>&2
 	if [ "$seconds" = "forever" ]; then
-		minui-presenter --message "$message" --timeout -1
+		minui-presenter --message "$message" --timeout -1 &
 	else
 		minui-presenter --message "$message" --timeout "$seconds"
 	fi
