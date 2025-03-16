@@ -1,13 +1,13 @@
-TAG ?= latest
 PAK_NAME := $(shell jq -r .label config.json)
 
 ARCHITECTURES := arm64
 PLATFORMS := tg5040
-MINUI_LIST_VERSION := 0.6.1
-MINUI_PRESENTER_VERSION := 0.3.0
+
 COREUTILS_VERSION := 0.0.28
 EVTEST_VERSION := 1.35
 JQ_VERSION := 1.7
+MINUI_LIST_VERSION := 0.6.1
+MINUI_PRESENTER_VERSION := 0.3.1
 
 clean:
 	rm -f bin/*/evtest || true
