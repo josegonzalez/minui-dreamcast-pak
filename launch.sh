@@ -1,5 +1,4 @@
 #!/bin/sh
-set -eo pipefail
 PAK_DIR="$(dirname "$0")"
 PAK_NAME="$(basename "$PAK_DIR")"
 PAK_NAME="${PAK_NAME%.*}"
