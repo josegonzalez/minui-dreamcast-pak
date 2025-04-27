@@ -94,7 +94,7 @@ write_settings_json() {
 	# name: Widescreen Mode
 	widescreen_mode="$(get_widescreen_mode)"
 
-	jq -rM '{settings: .settings}' "$PAK_DIR/config.json" >"$GAMESETTINGS_DIR/settings.json"
+	jq -rM '{settings: .settings}' "$PAK_DIR/settings.json" >"$GAMESETTINGS_DIR/settings.json"
 
 	update_setting_key "$GAMESETTINGS_DIR/settings.json" "Controller Layout" "$controller_layout"
 	update_setting_key "$GAMESETTINGS_DIR/settings.json" "CPU Mode" "$cpu_mode"

@@ -1,0 +1,13 @@
+{
+    "name": "DC",
+    "type": "EMU",
+    "description": "Runs Flycast in standalone mode for the specified rom",
+    "author": "josegonzalez",
+    "repo_url": "https://github.com/josegonzalez/minui-dc-pak",
+    "release_filename": "DC.pak.zip",
+    "platforms": [
+        "tg5040"
+    ],
+    "launch": "launch.sh",
+    "version": "latest"
+}
