@@ -1,11 +1,4 @@
 {
-    "label": "DC",
-    "launch": "launch.sh",
-    "description": "Runs Flycast in standalone mode for the specified rom",
-    "pak_type": "emu",
-    "platforms": [
-        "tg5040"
-    ],
     "settings": [
         {
             "name": "Controller Layout",
