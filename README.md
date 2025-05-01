@@ -1,6 +1,6 @@
 # minui-dreamcast.pak
 
-A MinUI Emu Pak for Dreamcast, wrapping the standalone `flycast` N64 emulator (version `7d64554`).
+A MinUI Emu Pak for Dreamcast, wrapping the standalone `flycast` Dreamcast emulator (version `7d64554`).
 
 ## Requirements
 
