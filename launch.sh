@@ -423,8 +423,9 @@ main() {
 	fi
 
 
-	#nasty hack - see if it runs
+	#H700 specific - additional libraries
 	if [ "$PLATFORM" = "h700" ]; then
+		export LD_LIBRARY_PATH="$PAK_DIR/lib_h700:$LD_LIBRARY_PATH"
 		export PLATFORM="tg5040"
 	fi
 
