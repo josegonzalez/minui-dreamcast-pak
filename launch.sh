@@ -422,6 +422,14 @@ main() {
 		export PLATFORM="tg5040"
 	fi
 
+
+	#H700 specific - additional libraries
+	if [ "$PLATFORM" = "h700" ]; then
+		export LD_LIBRARY_PATH="$PAK_DIR/lib_h700:$LD_LIBRARY_PATH"
+		export PLATFORM="tg5040"
+	fi
+
+
 	if [ "$PLATFORM" != "tg5040" ]; then
 		show_message "$PLATFORM is not a supported platform" 2
 		exit 1
