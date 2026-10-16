@@ -7,6 +7,7 @@ A MinUI Emu Pak for Dreamcast, wrapping the standalone `flycast` Dreamcast emula
 This pak is designed and tested on the following MinUI Platforms and devices:
 
 - `tg5040`: Trimui Brick (formerly `tg3040`)
+- `h700`: Anbernic H700 devices (RG35XX/RG40XX series) running NextUI
 
 Use the correct platform for your device.
 

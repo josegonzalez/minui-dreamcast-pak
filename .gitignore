@@ -6,4 +6,4 @@ res/fonts/*
 
 !bin/arm64/gptokeyb2
 !bin/arm64/flycast
-!bin/tg5040/xdg-user-dir
+!bin/xdg-user-dir

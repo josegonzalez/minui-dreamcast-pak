@@ -6,13 +6,18 @@ PUSH_SDCARD_PATH ?= /mnt/SDCARD
 PUSH_PLATFORM ?= tg5040
 
 ARCHITECTURES := arm64
-PLATFORMS := tg5040
+PLATFORMS := tg5040 h700
 
 COREUTILS_VERSION := 0.0.28
 EVTEST_VERSION := 0.1.0
 JQ_VERSION := 1.7
-MINUI_LIST_VERSION := 0.12.0
-MINUI_PRESENTER_VERSION := 0.10.0
+MINUI_LIST_VERSION := 0.15.4
+MINUI_PRESENTER_VERSION := 0.13.4
+
+# minui-list and minui-presenter publish one asset per platform, named after the
+# platform. h700 is NextUI-only, so its assets carry a -nextui suffix.
+MINUI_ASSET_h700 := h700-nextui
+MINUI_ASSET = $(or $(MINUI_ASSET_$*),$*)
 
 clean:
 	rm -f bin/*/evtest || true
@@ -53,11 +58,13 @@ bin/arm64/jq:
 	curl -sSL -o bin/arm64/jq.LICENSE "https://raw.githubusercontent.com/jqlang/jq/refs/heads/$(JQ_VERSION)/COPYING"
 
 bin/%/minui-list:
-	curl -f -o bin/$*/minui-list -sSL https://github.com/josegonzalez/minui-list/releases/download/$(MINUI_LIST_VERSION)/minui-list-$*
+	mkdir -p bin/$*
+	curl -f -o bin/$*/minui-list -sSL https://github.com/josegonzalez/minui-list/releases/download/$(MINUI_LIST_VERSION)/minui-list-$(MINUI_ASSET)
 	chmod +x bin/$*/minui-list
 
 bin/%/minui-presenter:
-	curl -f -o bin/$*/minui-presenter -sSL https://github.com/josegonzalez/minui-presenter/releases/download/$(MINUI_PRESENTER_VERSION)/minui-presenter-$*
+	mkdir -p bin/$*
+	curl -f -o bin/$*/minui-presenter -sSL https://github.com/josegonzalez/minui-presenter/releases/download/$(MINUI_PRESENTER_VERSION)/minui-presenter-$(MINUI_ASSET)
 	chmod +x bin/$*/minui-presenter
 
 release: build
