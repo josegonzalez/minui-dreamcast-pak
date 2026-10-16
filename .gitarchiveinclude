@@ -8,3 +8,5 @@ bin/arm64/jq
 bin/arm64/jq.LICENSE
 bin/tg5040/minui-list
 bin/tg5040/minui-presenter
+bin/h700/minui-list
+bin/h700/minui-presenter

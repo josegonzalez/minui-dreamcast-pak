@@ -6,7 +6,8 @@
   "repo_url": "https://github.com/josegonzalez/minui-dreamcast-pak",
   "release_filename": "DC.pak.zip",
   "platforms": [
-    "tg5040"
+    "tg5040",
+    "h700"
   ],
   "launch": "launch.sh",
   "version": "0.6.0"
