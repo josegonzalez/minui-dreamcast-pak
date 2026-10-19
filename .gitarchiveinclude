@@ -3,6 +3,7 @@ bin/arm64/coreutils.LICENSE
 bin/arm64/evtest
 bin/arm64/evtest.LICENSE
 bin/arm64/flycast.LICENSE
+bin/arm64/gptokeyb2
 bin/arm64/gptokeyb2.LICENSE
 bin/arm64/jq
 bin/arm64/jq.LICENSE
@@ -10,3 +11,4 @@ bin/tg5040/minui-list
 bin/tg5040/minui-presenter
 bin/h700/minui-list
 bin/h700/minui-presenter
+lib/libinterpose.aarch64.so

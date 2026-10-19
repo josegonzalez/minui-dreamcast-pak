@@ -4,6 +4,6 @@ bin/*
 res/fonts/*
 !res/fonts/.gitkeep
 
-!bin/arm64/gptokeyb2
 !bin/arm64/flycast
 !bin/xdg-user-dir
+lib/libinterpose.aarch64.so
