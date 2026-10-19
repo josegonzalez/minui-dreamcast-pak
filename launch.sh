@@ -17,6 +17,15 @@ if uname -m | grep -q '64'; then
 	architecture=arm64
 fi
 
+# main() rewrites PLATFORM to tg5040 on h700 so the platform guard passes. Keep
+# the real one around: h700 differs in the places that touch the input layer.
+export BASE_PLATFORM="$PLATFORM"
+
+# h700's built-in pad reports R2 as a digital key (NextUI workspace/h700/platform
+# /platform.h, CODE_R2). tg5040 has no key event for R2 at all and reports only
+# the ABS_RZ trigger axis, so the two need different hold detection.
+H700_CODE_R2=315
+
 export HOME="$USERDATA_PATH/DC-flycast"
 export PAK_DIR="$SDCARD_PATH/Emus/$PLATFORM/DC.pak"
 export FLYCAST_BIOS_DIR="$BIOS_PATH/DC/"
@@ -25,6 +34,10 @@ export FLYCAST_DATA_DIR="$USERDATA_PATH/DC-flycast/data/"
 export LD_LIBRARY_PATH="$PAK_DIR/lib:$LD_LIBRARY_PATH"
 export PATH="$PAK_DIR/bin/$architecture:$PAK_DIR/bin/$PLATFORM:$PAK_DIR/bin:$PATH"
 
+# recorded because h700 behaviour depends on the model, and set -x does not
+# expand the case word that reads it
+echo "DC.pak: base_platform=$BASE_PLATFORM model=$RGXX_MODEL architecture=$architecture" >&2
+
 export ROM_NAME="$(basename -- "$*")"
 export GAMESETTINGS_DIR="$USERDATA_PATH/DC-flycast/game-settings/$ROM_NAME"
 
@@ -32,6 +45,31 @@ get_sanitized_rom_name() {
 	ROM_NAME="$1"
 	SANITIZED_ROM_NAME="${ROM_NAME%.*}"
 	echo "$SANITIZED_ROM_NAME"
+}
+
+# Is R2 being held right now? Used to decide whether to open the settings menu.
+is_r2_held() {
+	if [ "$BASE_PLATFORM" = "h700" ]; then
+		# evtest --query reads the current key state via EVIOCGKEY and exits 10
+		# when the key is down. The pad is not always on the same node, so ask
+		# every node.
+		for node in /dev/input/event*; do
+			if [ ! -e "$node" ]; then
+				continue
+			fi
+
+			query_status=0
+			evtest --query "$node" EV_KEY "$H700_CODE_R2" >/dev/null 2>&1 || query_status="$?"
+			if [ "$query_status" -eq 10 ]; then
+				return 0
+			fi
+		done
+
+		return 1
+	fi
+
+	r2_value="$(coreutils timeout .1s evtest /dev/input/event3 2>/dev/null | awk '/ABS_RZ/{getline; print}' | awk '{print $2}' || true)"
+	[ "$r2_value" = "255" ]
 }
 
 get_controller_layout() {
@@ -137,8 +175,7 @@ settings_menu() {
 
 	write_settings_json
 
-	r2_value="$(coreutils timeout .1s evtest /dev/input/event3 2>/dev/null | awk '/ABS_RZ/{getline; print}' | awk '{print $2}' || true)"
-	if [ "$r2_value" = "255" ]; then
+	if is_r2_held; then
 		while true; do
 			minui-list --disable-auto-sleep --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --title "DC Settings" --action-button "X" --action-text "PLAY" --write-value state --write-location "$GAMESETTINGS_DIR/minui-list-output.json" --confirm-text "CONFIRM" || {
 				exit_code="$?"
