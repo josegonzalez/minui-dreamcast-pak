@@ -128,6 +128,7 @@ settings_menu() {
 	rm -f "$GAMESETTINGS_DIR/cpu-mode.tmp"
 	rm -f "$GAMESETTINGS_DIR/dpad-mode.tmp"
 	rm -f "$GAMESETTINGS_DIR/widescreen-mode.tmp"
+	rm -f "$GAMESETTINGS_DIR/minui-list-output.json"
 
 	controller_layout="$(get_controller_layout)"
 	cpu_mode="$(get_cpu_mode)"
@@ -139,8 +140,9 @@ settings_menu() {
 	r2_value="$(coreutils timeout .1s evtest /dev/input/event3 2>/dev/null | awk '/ABS_RZ/{getline; print}' | awk '{print $2}' || true)"
 	if [ "$r2_value" = "255" ]; then
 		while true; do
-			minui_list_output="$(minui-list --disable-auto-sleep --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --title "DC Settings" --action-button "X" --action-text "PLAY" --write-value state --confirm-text "CONFIRM")" || {
+			minui-list --disable-auto-sleep --file "$GAMESETTINGS_DIR/settings.json" --item-key "settings" --title "DC Settings" --action-button "X" --action-text "PLAY" --write-value state --write-location "$GAMESETTINGS_DIR/minui-list-output.json" --confirm-text "CONFIRM" || {
 				exit_code="$?"
+				minui_list_output="$(cat "$GAMESETTINGS_DIR/minui-list-output.json")"
 				# 4 = action button
 				# we break out of the loop because the action button is the play button
 				if [ "$exit_code" -eq 4 ]; then
@@ -163,6 +165,7 @@ settings_menu() {
 				fi
 			}
 
+			minui_list_output="$(cat "$GAMESETTINGS_DIR/minui-list-output.json")"
 			selected_index="$(echo "$minui_list_output" | jq -r ' .selected')"
 			# 5 = Re-apply default emulator settings
 			if [ "$selected_index" -eq 5 ]; then
