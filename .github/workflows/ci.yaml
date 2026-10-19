@@ -41,6 +41,7 @@ jobs:
 
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v4
+        if: github.event_name != 'pull_request'
         with:
           subject-path: "dist/${{ steps.pak-name.outputs.PAK_NAME }}.pak.zip"
 
