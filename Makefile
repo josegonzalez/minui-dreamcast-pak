@@ -10,6 +10,7 @@ PLATFORMS := tg5040 h700
 
 COREUTILS_VERSION := 0.0.28
 EVTEST_VERSION := 0.1.0
+GPTOKEYB2_VERSION := 2026.10.05-1355
 JQ_VERSION := 1.7
 MINUI_LIST_VERSION := 0.15.4
 MINUI_PRESENTER_VERSION := 0.13.4
@@ -24,12 +25,14 @@ clean:
 	rm -f bin/*/coreutils || true
 	rm -f bin/*/coreutils.LICENSE || true
 	rm -f bin/*/flycast.LICENSE || true
+	rm -f bin/*/gptokeyb2 || true
 	rm -f bin/*/gptokeyb2.LICENSE || true
+	rm -f lib/libinterpose.aarch64.so || true
 	rm -f bin/*/jq || true
 	rm -f bin/*/minui-list || true
 	rm -f bin/*/minui-presenter || true
 
-build: $(foreach platform,$(PLATFORMS),bin/$(platform)/minui-list bin/$(platform)/minui-presenter) $(foreach arch,$(ARCHITECTURES),bin/$(arch)/evtest bin/$(arch)/coreutils bin/$(arch)/jq) bin/arm64/flycast.LICENSE bin/arm64/gptokeyb2.LICENSE
+build: $(foreach platform,$(PLATFORMS),bin/$(platform)/minui-list bin/$(platform)/minui-presenter) $(foreach arch,$(ARCHITECTURES),bin/$(arch)/evtest bin/$(arch)/coreutils bin/$(arch)/jq) bin/arm64/flycast.LICENSE bin/arm64/gptokeyb2 bin/arm64/gptokeyb2.LICENSE
 
 bin/arm64/coreutils:
 	mkdir -p bin/arm64
@@ -48,6 +51,16 @@ bin/%/evtest:
 
 bin/arm64/flycast.LICENSE:
 	curl -sSL -o bin/arm64/flycast.LICENSE "https://raw.githubusercontent.com/flyinghead/flycast/refs/heads/master/LICENSE"
+
+# gptokeyb2 ships one zip holding every architecture, and it is linked against
+# libinterpose, so the shim has to come out of the same zip as the binary.
+bin/arm64/gptokeyb2:
+	mkdir -p bin/arm64 lib
+	curl -sSL -o bin/arm64/gptokeyb2.zip "https://github.com/PortsMaster/gptokeyb2/releases/download/$(GPTOKEYB2_VERSION)/gptokeyb2-all.zip"
+	unzip -o -j bin/arm64/gptokeyb2.zip gptokeyb2 -d bin/arm64
+	unzip -o -j bin/arm64/gptokeyb2.zip libinterpose.aarch64.so -d lib
+	rm bin/arm64/gptokeyb2.zip
+	chmod +x bin/arm64/gptokeyb2
 
 bin/arm64/gptokeyb2.LICENSE:
 	curl -sSL -o bin/arm64/gptokeyb2.LICENSE "https://raw.githubusercontent.com/PortsMaster/gptokeyb2/refs/heads/master/LICENSE.txt"
