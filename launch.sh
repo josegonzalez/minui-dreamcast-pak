@@ -117,6 +117,12 @@ get_dpad_mode() {
 		dpad_mode="joystick-on-f2"
 	fi
 
+	# h700 has no trimui_inputd, so the modes that need it behave as "joystick",
+	# which the pak applies inside the flycast mapping instead
+	if [ "$BASE_PLATFORM" = "h700" ] && [ "$dpad_mode" != "dpad" ]; then
+		dpad_mode="joystick"
+	fi
+
 	echo "$dpad_mode"
 }
 
@@ -142,6 +148,17 @@ write_settings_json() {
 	widescreen_mode="$(get_widescreen_mode)"
 
 	jq -rM '{settings: .settings}' "$PAK_DIR/settings.json" >"$GAMESETTINGS_DIR/settings.json"
+
+	# h700 cannot apply the two modes that need trimui_inputd, so do not offer
+	# them. This has to happen before the update_setting_key calls below, which
+	# resolve "selected" against the options list.
+	if [ "$BASE_PLATFORM" = "h700" ]; then
+		# shellcheck disable=SC2016
+		jq -rM --argjson options '["dpad", "joystick"]' '
+			.settings |= map(if .name == "DPAD Mode" then . + {"options": $options} else . end)
+		' "$GAMESETTINGS_DIR/settings.json" >"$GAMESETTINGS_DIR/settings.json.tmp"
+		mv -f "$GAMESETTINGS_DIR/settings.json.tmp" "$GAMESETTINGS_DIR/settings.json"
+	fi
 
 	update_setting_key "$GAMESETTINGS_DIR/settings.json" "Controller Layout" "$controller_layout"
 	update_setting_key "$GAMESETTINGS_DIR/settings.json" "CPU Mode" "$cpu_mode"
@@ -277,16 +294,19 @@ configure_controls() {
 	controller_layout="$(get_controller_layout)"
 	dpad_mode="$(get_dpad_mode)"
 
-	if [ "$dpad_mode" = "joystick-on-f2" ]; then
-		mkdir -p /tmp/trimui_inputd/
-		touch /tmp/trimui_inputd/dpad2axis_hold_f2
-	elif [ "$dpad_mode" = "joystick-and-dpad" ]; then
-		mkdir -p /tmp/trimui_inputd/
-		touch /tmp/trimui_inputd/input_dpad_to_joystick
-	elif [ "$dpad_mode" = "joystick" ]; then
-		mkdir -p /tmp/trimui_inputd/
-		touch /tmp/trimui_inputd/input_no_dpad
-		touch /tmp/trimui_inputd/input_dpad_to_joystick
+	# trimui_inputd is Trimui's input daemon, which exists only on tg5040
+	if [ "$BASE_PLATFORM" != "h700" ]; then
+		if [ "$dpad_mode" = "joystick-on-f2" ]; then
+			mkdir -p /tmp/trimui_inputd/
+			touch /tmp/trimui_inputd/dpad2axis_hold_f2
+		elif [ "$dpad_mode" = "joystick-and-dpad" ]; then
+			mkdir -p /tmp/trimui_inputd/
+			touch /tmp/trimui_inputd/input_dpad_to_joystick
+		elif [ "$dpad_mode" = "joystick" ]; then
+			mkdir -p /tmp/trimui_inputd/
+			touch /tmp/trimui_inputd/input_no_dpad
+			touch /tmp/trimui_inputd/input_dpad_to_joystick
+		fi
 	fi
 
 	mkdir -p "${FLYCAST_CONFIG_DIR}mappings"
@@ -405,9 +425,11 @@ cleanup() {
 	fi
 
 	# cleanup remap
-	rm -f /tmp/trimui_inputd/input_no_dpad
-	rm -f /tmp/trimui_inputd/input_dpad_to_joystick
-	rm -f /tmp/trimui_inputd/dpad2axis_hold_f2
+	if [ "$BASE_PLATFORM" != "h700" ]; then
+		rm -f /tmp/trimui_inputd/input_no_dpad
+		rm -f /tmp/trimui_inputd/input_dpad_to_joystick
+		rm -f /tmp/trimui_inputd/dpad2axis_hold_f2
+	fi
 
 	# remove resume slot
 	rm -f /tmp/resume_slot.txt
