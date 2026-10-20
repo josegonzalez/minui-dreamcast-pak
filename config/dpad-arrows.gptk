@@ -1,0 +1,14 @@
+# Mirrors the dpad onto the arrow keys, so that flycast's own menu can still be
+# navigated while the dpad is driving the Dreamcast analog stick. Loaded by
+# launch.sh on h700 models that have no analog stick, in joystick DPAD Mode.
+#
+# Only these four controls are mapped: anything else gptokeyb2 would send by
+# default is cleared, because flycast binds a lot of keys by default and an
+# unexpected one would reach the Dreamcast.
+[controls]
+overlay = clear
+
+up = up
+down = down
+left = left
+right = right

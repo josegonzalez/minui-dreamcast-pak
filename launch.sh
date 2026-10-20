@@ -73,6 +73,115 @@ h700_has_lstick() {
 	return 1
 }
 
+# gptokeyb2 creates a keyboard and a mouse, and has renamed the keyboard
+# between releases ("Fake Keyboard" before 2.00.03, "Fake Keyboard Mouse"
+# after), so match on the prefix and ignore the mouse.
+find_fake_keyboard_node() {
+	for node in /dev/input/event*; do
+		if [ ! -e "$node" ]; then
+			continue
+		fi
+		name="$(cat "/sys/class/input/$(basename "$node")/device/name" 2>/dev/null || true)"
+		case "$name" in
+		"Fake Keyboard"*)
+			echo "$node"
+			return
+			;;
+		esac
+	done
+}
+
+# Mirror the dpad onto arrow keys so flycast's own menu stays navigable while
+# the dpad is driving the Dreamcast analog stick. imgui moves between items on
+# dpad or arrow keys only, and a model with no analog stick has nothing else
+# left to offer it.
+#
+# gptokeyb2 reads the pad through SDL and writes the arrow keys to a uinput
+# keyboard. It never grabs the pad, so flycast keeps receiving the dpad as well.
+#
+# NextUI's SDL is built without libudev, so SDL_EVDEV opens no keyboard at all
+# unless SDL_EVDEV_DEVICES names one. The 2 is SDL_UDEV_DEVICE_KEYBOARD.
+start_dpad_keyboard() {
+	if ! command -v gptokeyb2 >/dev/null 2>&1; then
+		return 1
+	fi
+
+	# A session killed hard enough to skip cleanup leaves gptokeyb2 and its
+	# uinput device behind. Clear those out first, and wait for the node to go
+	# with them, so the lookup below cannot settle on an orphan's device
+	# instead: they share a name.
+	stop_dpad_keyboard
+	tries=0
+	while [ -n "$(find_fake_keyboard_node)" ] && [ "$tries" -lt 20 ]; do
+		tries=$((tries + 1))
+		coreutils sleep .1
+	done
+
+	# the program name is what gptokeyb2 watches to know when to stop
+	gptokeyb2 flycast -c "$PAK_DIR/config/dpad-arrows.gptk" >/dev/null 2>&1 &
+
+	# wait for its uinput device to appear, then point SDL at it
+	tries=0
+	while [ "$tries" -lt 20 ]; do
+		node="$(find_fake_keyboard_node)"
+		if [ -n "$node" ]; then
+			export SDL_EVDEV_DEVICES="2:$node"
+			return 0
+		fi
+		tries=$((tries + 1))
+		coreutils sleep .1
+	done
+
+	stop_dpad_keyboard
+	return 1
+}
+
+# SIGKILL, because SDL_Init turns SIGTERM into an SDL_QUIT event that gptokeyb2
+# never handles, so it ignores a polite kill. This is what gptokeyb2's own
+# README does ("kill -9 $(pidof gptokeyb2)"), and the kernel tears down its
+# uinput devices when the process dies, so nothing is left behind.
+stop_dpad_keyboard() {
+	killall -9 gptokeyb2 >/dev/null 2>&1 || true
+}
+
+# flycast's built-in keyboard mapping binds the arrow keys to the Dreamcast
+# dpad (KeyboardInputMapping in keyboard_device.h), so a mirrored dpad would
+# drive the analog stick and the dpad at once. Give the keyboard a mapping with
+# no bindings instead. imgui still sees the keys, because gui_keyboard_key runs
+# whatever the mapping says, but nothing reaches the Dreamcast.
+#
+# Written only while the mirror is running and removed otherwise, because the
+# config directory is shared by every game.
+keyboard_mapping_file() {
+	echo "${FLYCAST_CONFIG_DIR}mappings/SDL_Keyboard.cfg"
+}
+
+write_neutral_keyboard_mapping() {
+	cat >"$(keyboard_mapping_file)" <<-NEUTRAL
+		[emulator]
+		dead_zone = 10
+		mapping_name = DC.pak neutral keyboard
+		rumble_power = 100
+		saturation = 100
+		version = 3
+	NEUTRAL
+}
+
+remove_neutral_keyboard_mapping() {
+	mapping_file="$(keyboard_mapping_file)"
+	if [ ! -f "$mapping_file" ]; then
+		return
+	fi
+
+	# only ever remove the one this pak wrote, never a keyboard mapping the
+	# user made for a keyboard of their own
+	if ! grep -q "^mapping_name = DC.pak neutral keyboard$" "$mapping_file"; then
+		return
+	fi
+
+	rm -f "$mapping_file"
+}
+
 # Is R2 being held right now? Used to decide whether to open the settings menu.
 is_r2_held() {
 	if [ "$BASE_PLATFORM" = "h700" ]; then
@@ -358,7 +467,14 @@ apply_h700_dpad_mode() {
 		swap_dpad_and_stick "$1"
 	else
 		map_dpad_to_analog "$1"
-		show_message "DPAD is the analog stick. The flycast menu cannot be navigated in this mode." 2
+
+		# with no stick left to drive the Dreamcast dpad, mirror the dpad onto
+		# the arrow keys so flycast's own menu can still be navigated
+		if start_dpad_keyboard; then
+			write_neutral_keyboard_mapping
+		else
+			show_message "DPAD is the analog stick. The flycast menu cannot be navigated in this mode." 2
+		fi
 	fi
 }
 
@@ -398,6 +514,12 @@ configure_controls() {
 		else
 			cp -f "$PAK_DIR/config/mappings/default/$DEFAULT_MAPPING_FILE_NAME" "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 		fi
+	fi
+
+	# never leave the neutral keyboard mapping behind for a mode that does not
+	# use the dpad mirror
+	if [ "$BASE_PLATFORM" = "h700" ]; then
+		remove_neutral_keyboard_mapping
 	fi
 
 	if [ "$BASE_PLATFORM" = "h700" ] && [ "$dpad_mode" = "joystick" ]; then
@@ -506,6 +628,11 @@ cleanup() {
 	if [ -f "$HOME/cpu_max_freq.txt" ]; then
 		cat "$HOME/cpu_max_freq.txt" >/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 		rm -f "$HOME/cpu_max_freq.txt"
+	fi
+
+	stop_dpad_keyboard
+	if [ "$BASE_PLATFORM" = "h700" ]; then
+		remove_neutral_keyboard_mapping
 	fi
 
 	# cleanup remap
