@@ -78,6 +78,10 @@ Allows changing between controller layouts.
 
 If `default` is set, the pak will reset the settings to the built-in controller mapping on boot.
 
+Flycast names its mapping file after the SDL joystick name, which is not the same
+on every platform, so the pak writes the layout under the name flycast reads on
+`h700`.
+
 When `custom` is selected, users will be allowed to customize their controller layout and have that persist across game starts. These settings will also be stored in a per-game path, and restored when that same game is played again.
 
 #### CPU Mode
