@@ -26,6 +26,15 @@ export BASE_PLATFORM="$PLATFORM"
 # the ABS_RZ trigger axis, so the two need different hold detection.
 H700_CODE_R2=315
 
+# flycast names its mapping file after the SDL joystick name, which is "Xbox 360
+# Controller" on tg5040 and "ANBERNIC-keys" on h700. The tg5040 name is also the
+# one the layout this pak ships is stored under.
+DEFAULT_MAPPING_FILE_NAME="SDL_Xbox 360 Controller.cfg"
+MAPPING_FILE_NAME="$DEFAULT_MAPPING_FILE_NAME"
+if [ "$BASE_PLATFORM" = "h700" ]; then
+	MAPPING_FILE_NAME="SDL_ANBERNIC-keys.cfg"
+fi
+
 export HOME="$USERDATA_PATH/DC-flycast"
 export PAK_DIR="$SDCARD_PATH/Emus/$PLATFORM/DC.pak"
 export FLYCAST_BIOS_DIR="$BIOS_PATH/DC/"
@@ -282,12 +291,12 @@ configure_controls() {
 
 	mkdir -p "${FLYCAST_CONFIG_DIR}mappings"
 	if [ "$controller_layout" = "default" ]; then
-		cp -f "$PAK_DIR/config/mappings/default/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+		cp -f "$PAK_DIR/config/mappings/default/$DEFAULT_MAPPING_FILE_NAME" "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 	elif [ "$controller_layout" = "custom" ]; then
-		if [ -f "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg" ]; then
-			cp -f "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+		if [ -f "$GAMESETTINGS_DIR/$MAPPING_FILE_NAME" ]; then
+			cp -f "$GAMESETTINGS_DIR/$MAPPING_FILE_NAME" "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 		else
-			cp -f "$PAK_DIR/config/mappings/default/SDL_Xbox 360 Controller.cfg" "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg"
+			cp -f "$PAK_DIR/config/mappings/default/$DEFAULT_MAPPING_FILE_NAME" "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 		fi
 	fi
 }
@@ -447,7 +456,7 @@ cleanup() {
 	controller_layout="$(get_controller_layout)"
 	if [ "$controller_layout" = "custom" ]; then
 		mkdir -p "$GAMESETTINGS_DIR"
-		cp -f "${FLYCAST_CONFIG_DIR}mappings/SDL_Xbox 360 Controller.cfg" "$GAMESETTINGS_DIR/SDL_Xbox 360 Controller.cfg"
+		cp -f "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME" "$GAMESETTINGS_DIR/$MAPPING_FILE_NAME"
 	fi
 
 	sync
