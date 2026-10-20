@@ -56,6 +56,23 @@ get_sanitized_rom_name() {
 	echo "$SANITIZED_ROM_NAME"
 }
 
+# Analog stick per h700 SKU, mirroring NextUI's own detection. Without a stick
+# there is nothing to swap the dpad with.
+#
+# NextUI reports the model twice and in two different cases: RGXX_MODEL is upper
+# case ("RGSP") while DEVICE is lower ("rgsp"). Normalize before matching.
+h700_has_lstick() {
+	model="$(echo "${RGXX_MODEL:-$DEVICE}" | tr '[:upper:]' '[:lower:]')"
+
+	case "$model" in
+	rg34xxsp | rg35xxh | rg35xxpro | rg40xxh | rg40xxv | rgcubexx)
+		return 0
+		;;
+	esac
+
+	return 1
+}
+
 # Is R2 being held right now? Used to decide whether to open the settings menu.
 is_r2_held() {
 	if [ "$BASE_PLATFORM" = "h700" ]; then
@@ -290,6 +307,69 @@ configure_platform() {
 	sync
 }
 
+# h700 has no trimui_inputd, so "joystick" is applied inside the flycast mapping
+# instead. Only the hat is rewritten, named by flycast's own key codes 256-259,
+# so a button someone bound to the Dreamcast dpad themselves is left alone and
+# the pair below is exactly reversible, which revert_h700_dpad_mode() needs.
+map_dpad_to_analog() {
+	sed -i \
+		-e "s/= 256:btn_dpad1_up/= 256:btn_analog_up/" \
+		-e "s/= 257:btn_dpad1_down/= 257:btn_analog_down/" \
+		-e "s/= 258:btn_dpad1_left/= 258:btn_analog_left/" \
+		-e "s/= 259:btn_dpad1_right/= 259:btn_analog_right/" \
+		"$1"
+}
+
+unmap_dpad_from_analog() {
+	sed -i \
+		-e "s/= 256:btn_analog_up/= 256:btn_dpad1_up/" \
+		-e "s/= 257:btn_analog_down/= 257:btn_dpad1_down/" \
+		-e "s/= 258:btn_analog_left/= 258:btn_dpad1_left/" \
+		-e "s/= 259:btn_analog_right/= 259:btn_dpad1_right/" \
+		"$1"
+}
+
+# On a model with a stick the two are exchanged, so the stick still drives the
+# Dreamcast dpad and flycast's own menu stays navigable.
+#
+# The first stick has two spellings: the v3 "axis_left" that flycast writes
+# itself, and the "btn_analog_left" compat name this pak ships. Normalize onto
+# the compat name so that applying the swap twice restores the original mapping,
+# which revert_h700_dpad_mode() relies on.
+#
+# Unlike the pair above this matches on the bind name alone, and must keep doing
+# so: anchoring it to the hat codes stops two passes from restoring the original,
+# because the stick binds live on axes whose numbers this cannot know.
+swap_dpad_and_stick() {
+	mapping_file="$1"
+
+	for direction in up down left right; do
+		sed -i \
+			-e "s/:axis_$direction/:btn_analog_$direction/" \
+			-e "s/:btn_analog_$direction/:__stick_$direction/" \
+			-e "s/:btn_dpad1_$direction/:btn_analog_$direction/" \
+			-e "s/:__stick_$direction/:btn_dpad1_$direction/" \
+			"$mapping_file"
+	done
+}
+
+apply_h700_dpad_mode() {
+	if h700_has_lstick; then
+		swap_dpad_and_stick "$1"
+	else
+		map_dpad_to_analog "$1"
+		show_message "DPAD is the analog stick. The flycast menu cannot be navigated in this mode." 2
+	fi
+}
+
+revert_h700_dpad_mode() {
+	if h700_has_lstick; then
+		swap_dpad_and_stick "$1"
+	else
+		unmap_dpad_from_analog "$1"
+	fi
+}
+
 configure_controls() {
 	controller_layout="$(get_controller_layout)"
 	dpad_mode="$(get_dpad_mode)"
@@ -318,6 +398,10 @@ configure_controls() {
 		else
 			cp -f "$PAK_DIR/config/mappings/default/$DEFAULT_MAPPING_FILE_NAME" "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 		fi
+	fi
+
+	if [ "$BASE_PLATFORM" = "h700" ] && [ "$dpad_mode" = "joystick" ]; then
+		apply_h700_dpad_mode "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME"
 	fi
 }
 
@@ -479,6 +563,13 @@ cleanup() {
 	if [ "$controller_layout" = "custom" ]; then
 		mkdir -p "$GAMESETTINGS_DIR"
 		cp -f "${FLYCAST_CONFIG_DIR}mappings/$MAPPING_FILE_NAME" "$GAMESETTINGS_DIR/$MAPPING_FILE_NAME"
+
+		# the mode is layered on top of the saved mapping, so undo it before
+		# saving, or the next launch would apply it to a mapping that has it
+		# already and switching back to "dpad" would leave the dpad on the stick
+		if [ "$BASE_PLATFORM" = "h700" ] && [ "$(get_dpad_mode)" = "joystick" ]; then
+			revert_h700_dpad_mode "$GAMESETTINGS_DIR/$MAPPING_FILE_NAME"
+		fi
 	fi
 
 	sync

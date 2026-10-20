@@ -98,6 +98,25 @@ Allows changing how the dpad is used in game.
 - default: `dpad`
 - options: `dpad`, `joystick`, `joystick and dpad`, `joystick on f2`
 
+> [!NOTE]
+> On `h700` only `dpad` and `joystick` are offered. The other two modes need
+> Trimui's `trimui_inputd`, which h700 does not have.
+>
+> `joystick` is also applied differently. On `tg5040` the input daemon redirects
+> the dpad to the stick. On `h700` the pak rewrites the flycast mapping instead,
+> and what it writes depends on whether the model has an analog stick:
+>
+> - **With a stick** (`rg34xxsp`, `rg35xxh`, `rg35xxpro`, `rg40xxh`, `rg40xxv`,
+>   `rgcubexx`) the two are exchanged: the dpad drives the Dreamcast analog
+>   stick and the physical stick drives the Dreamcast dpad. Use the stick to
+>   navigate the flycast menu while this mode is on.
+> - **Without a stick** the dpad drives the Dreamcast analog stick and nothing
+>   drives the Dreamcast dpad. Flycast's own menu only moves between items on
+>   dpad input, so **it cannot be navigated in this mode**. This is the same
+>   trade `tg5040` makes with `input_no_dpad`. `MENU` still quits the game, and
+>   holding `R2` at launch still opens this pak's settings menu, so the mode can
+>   always be turned back off.
+
 #### Widescreen Mode
 
 > [!NOTE]
