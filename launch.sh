@@ -721,6 +721,17 @@ main() {
 	#H700 specific - additional libraries
 	if [ "$PLATFORM" = "h700" ]; then
 		export LD_LIBRARY_PATH="$PAK_DIR/lib_h700:$LD_LIBRARY_PATH"
+
+		# lib/ vendors alsa-lib 1.2.2 for tg5040, but h700 runs on the stock
+		# Anbernic OS, whose /usr/share/alsa config comes from 1.2.6 and uses
+		# syntax 1.2.2 cannot parse resulting in no audio. Preloading the OS
+		# provided library (1.2.6 in this case) satisfies flycast's libasound.so.2
+		# by soname, so 1.2.2 is never used.
+		system_libasound="/usr/lib/aarch64-linux-gnu/libasound.so.2"
+		if [ -e "$system_libasound" ]; then
+			export LD_PRELOAD="$system_libasound:$LD_PRELOAD"
+		fi
+
 		export PLATFORM="tg5040"
 	fi
 
