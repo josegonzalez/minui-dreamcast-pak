@@ -534,15 +534,21 @@ configure_cpu() {
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq >"$HOME/cpu_min_freq.txt"
 	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq >"$HOME/cpu_max_freq.txt"
 
+	max_freq="$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)"
+
+	# Calculate a percentage of the max frequency for minimum CPU freq
 	if [ "$cpu_mode" = "performance" ]; then
 		echo performance >/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-		echo 1608000 >/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-		echo 1800000 >/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+		MIN_FREQ_PERCENTAGE=89
 	else
 		echo ondemand >/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-		echo 1200000 >/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-		echo 1800000 >/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+		MIN_FREQ_PERCENTAGE=66
 	fi
+	min_freq=$((max_freq * MIN_FREQ_PERCENTAGE / 100))
+
+	# max first: a min above the live max is clamped rather than honoured
+	echo "$max_freq" >/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+	echo "$min_freq" >/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 }
 
 configure_widescreen() {
